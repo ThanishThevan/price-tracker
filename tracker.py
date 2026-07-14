@@ -30,9 +30,19 @@ def save_history(history):
 
 if __name__ == "__main__":
     title, price = get_price()
-
     history = load_history()
 
+    if history:
+        last_price = history[-1]["price"]
+        if price < last_price:
+            print(f"Price dropped! {title}: ${last_price} --> ${price}")
+        elif price > last_price:
+            print(f"Price increased! {title}: $${last_price} --> ${price}")
+        else:
+            print(f"No change: {title} is still ${price}")
+    else:
+        print(f"First check: {title} is ${price}")
+        
     entry = {
         "title": title,
         "price": price,
