@@ -1,9 +1,17 @@
 from bs4 import BeautifulSoup
 import requests
 import json
+import os
+import smtplib
+from email.mime.text import MIMEText
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 FILE_NAME = "price_history.json"
+EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 
 PRODUCTS = [
     {
@@ -48,6 +56,16 @@ def get_last_price(history, name):
         return matches[-1]["price"]
     return None
 
+def send_email(subject, body):
+    msg = MIMEText(body)
+    msg["Subject"] = subject
+    msg["From"] = EMAIL_ADDRESS
+    msg["To"] = EMAIL_ADDRESS
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+        server.send_message(msg)
+
 if __name__ == "__main__":
     history = load_history()
 
@@ -58,6 +76,10 @@ if __name__ == "__main__":
             print(f"First check: {title} is ${price}")
         elif price < last_price:
             print(f"Price dropped! {title}: ${last_price} --> ${price}")
+            send_email(
+                subject=f"Price drop: {title}",
+                body=f"{title} dropped from ${last_price} to ${price}!"
+            )
         elif price > last_price:
             print(f"Price increased! {title}: ${last_price} --> ${price}")
         else:
